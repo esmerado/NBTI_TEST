@@ -1,14 +1,54 @@
-import { useFormik } from "formik";
-import { nbt_text_template } from "Templates/cv";
-import { DivForm, Error, Form } from "./styles";
+import {prepareDataForValidation,useFormik} from "formik";
+import {nbt_text_template} from "Templates/cv";
+import {DivForm, Error, Form} from "./styles";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import {Buffer} from 'buffer';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 const downloadPdf = (values) => {
   console.log('values', values)
-  pdfMake.createPdf(nbt_text_template({...values})).download();
+  const pdf = pdfMake.createPdf(nbt_text_template({
+    ...values
+  }))
+  console.log('pdf', pdf);
+
+  encodePdf(pdf)
+
+
+}
+// Buffer.from(str, 'base64') and buf.toString('base64')
+const encodePdf = async (pdf) => {
+
+  const encpdf = await pdf.getBase64(data => {
+    console.log('encodned', data)
+    const decPdf = Buffer.from(data, 'base64')
+  console.log('decoded', decPdf)
+  createAndDownloadBlobFile(decPdf,'test.pdf')
+  })
+  
+}
+
+function crFeateAndDownloadBlobile(body, filename, extension = 'pdf') {
+  const blob = new Blob([body]);
+  const fileName = `${filename}.${extension}`;
+  if (navigator.msSaveBlob) {
+    // IE 10+
+    navigator.msSaveBlob(blob, fileName);
+  } else {
+    const link = document.createElement('a');
+    // Browsers that support HTML5 download attribute
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
 }
 
 const validate = (values) => {
